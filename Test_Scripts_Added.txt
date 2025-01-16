@@ -1,0 +1,106 @@
+  [TestMethod]
+  public void TestAddProductQtyNegative()
+  {
+      Product product = new()
+      {
+          Name = "Prod1",
+          QuantityInStock = -1,
+          Price = 1.0M 
+      };
+
+      var results = new List<ValidationResult>();
+      var context = new ValidationContext(product, null, null);
+      bool isProductValid = Validator.TryValidateObject(product, context, results, true);
+
+      Assert.IsFalse(isProductValid);
+  }
+
+
+  [TestMethod]
+  public void TestRemoveProduct()
+  {
+      List<Product> inv = new List<Product>
+      {
+          new Product { Name = "Prod1", QuantityInStock = 100, Price = 10.0M },
+          new Product { Name = "Prod2", QuantityInStock = 200, Price = 20.0M }
+      };
+
+      string prodName = "Prod1";
+      Product product = inv.FirstOrDefault(p => p.Name == prodName);
+      bool prodRemove = inv.Remove(product);
+
+      Assert.IsNotNull(product, "The product exist in the inventory.");
+      Assert.IsTrue(prodRemove, "The product got removed from the inventory.");
+      Assert.IsFalse(inv.Any(p => p.Name == prodName), "The product should no longer exist in the inventory.");
+  }
+
+
+  [TestMethod]
+  public void TestGetTotalValue()
+  {
+    
+      List<Product> inventory = new List<Product>
+      {
+          new Product { Name = "Product1", QuantityInStock = 10, Price = 5.0M },
+          new Product { Name = "Product2", QuantityInStock = 2, Price = 20.0M },
+          new Product { Name = "Product3", QuantityInStock = 5, Price = 10.0M }
+      };
+
+   
+      decimal expectedTotalValue = 50.0M + 40.0M + 50.0M; 
+
+ 
+      decimal actualTotalValue = GetTotalValue(inventory);
+
+
+      Assert.AreEqual(expectedTotalValue, actualTotalValue, "The calculated total value of the inventory is correct.");
+  }
+
+  private decimal GetTotalValue(List<Product> inventory)
+  {
+      decimal totalValue = 0;
+      foreach (var product in inventory)
+      {
+          totalValue += product.QuantityInStock * product.Price;
+      }
+      return totalValue;
+  }
+
+  [TestMethod]
+  public void TestE2E()
+  {
+
+      List<Product> inventory = new List<Product>();
+
+      AddProduct(inventory, new Product { Name = "Prod1", QuantityInStock = 10, Price = 5.0M });
+      AddProduct(inventory, new Product { Name = "Prod2", QuantityInStock = 2, Price = 20.0M });
+      AddProduct(inventory, new Product { Name = "Prod3", QuantityInStock = 5, Price = 10.0M });
+
+      Assert.AreEqual(3, inventory.Count, "Three products should be added to the inventory.");
+
+
+      bool isRemoved = RemoveProduct(inventory, "Prod2");
+
+
+      Assert.IsTrue(isRemoved, "Prod2 should be removed from the inventory.");
+      Assert.AreEqual(2, inventory.Count, "The inventory should contain two products after removing one.");
+ 
+      decimal totalValue = GetTotalValue(inventory);
+    
+      decimal expectedTotalValue = (10 * 5.0M) + (5 * 10.0M); 
+      Assert.AreEqual(expectedTotalValue, totalValue, "The total inventory value should be calculated correctly.");
+
+  
+      Assert.IsFalse(inventory.Exists(p => p.Name == "Prod2"), "Prod2 should no longer exist in the inventory.");
+  }
+
+  private void AddProduct(List<Product> inventory, Product product)
+  {
+      inventory.Add(product);
+  }
+
+  private bool RemoveProduct(List<Product> inventory, string productName)
+  {
+      Product product = inventory.Find(p => p.Name == productName);
+      return inventory.Remove(product);
+  }
